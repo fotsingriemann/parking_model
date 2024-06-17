@@ -13,14 +13,15 @@ load_dotenv()
 # Accéder aux variables d'environnement
 data_path = os.getenv('DATA_PATH')
 arival_path = os.getenv('DATA_ARIVAL_PATH')
+command_path = os.getenv('COMMAND_PATH')
 
-from function_helper import delete_files, excel_detail_each_day, excel_details, heure_en_secondes
+from function_helper import delete_files, excel_detail_each_day, excel_details, heure_en_secondes, is_file_empty
 
 
 print("Verification des nouvelle sources de donnees . . . \n")
 
 # S'il y a plus d'un fichier source dans le dossier data
-if(len(os.listdir(os.path.join(arival_path))) >= 1) :
+if(len(os.listdir(arival_path)) >= 1) :
     print("Nouvelle source de donnees disponible \n")
     
     print("Chargement des donnees de reference . . . \n")
@@ -60,6 +61,41 @@ if(len(os.listdir(os.path.join(arival_path))) >= 1) :
 
     delete_files(data_path)
 
+    print("Verification de l'entree des commandes  . . .\n")
+
+    # if not is_file_empty(os.path.join(command_path, "add_new_location.txt")):
+        
+    
+    
+    if(not is_file_empty(os.path.join(command_path, "remove_consideration_location.txt"))) :
+        file_commande_remove = open(os.path.join(command_path, "remove_consideration_location.txt"), 'r')
+        for line in file_commande_remove:
+                if line == '' : break
+                print(f"Execution des commande utilisateur de type delete detecter . . .")
+                if(not "delete" in line):
+                    print("cette commande de type delete n'est pas valide")
+                else:
+                    chaine = line.split("delete")
+                    result = result[result["IMMATRICULATION"] != chaine[0]]
+                    result = result[result["pluscode"] != chaine[1]]
+            
+                print(f"commande du vehicule {chaine[0]} executer sous restriction de sa location {chaine[1]}")
+
+    
+
+    commande_add = list()
+  
+    if(not is_file_empty(os.path.join(command_path, "add_consideration_location.txt"))) :   
+        file_commande_add = open(os.path.join(command_path, "add_consideration_location.txt"), 'r')
+        for line in file_commande_add:
+                if(line == '') : break
+                print(f"traitement des commande utilisateur add detecter . . .")
+                if(not "add" in line):
+                    print("cette commande de type add n'est pas valide")
+                else:
+                    commande_add.append(line.split("add"))
+
+
     print("Sauvegarde de la nouvelle source de reference . . . \n")
 
     result.to_excel(os.path.join(data_path, "reference.xlsx"))
@@ -75,8 +111,8 @@ if(len(os.listdir(os.path.join(arival_path))) >= 1) :
         else : pass
 
         if(not os.path.isfile(f"model_save/{immatriculation}/details.xlsx")):
-            excel_details(result, immatriculation)
-            excel_detail_each_day(result, immatriculation)
+            excel_details(result, immatriculation, commande_add)
+            excel_detail_each_day(result, immatriculation, commande_add)
 
         else: pass
 
