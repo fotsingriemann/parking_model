@@ -1,0 +1,11 @@
+# Ignore les fichiers d'environnement virtuel
+model_env/
+venv/
+env/
+
+# Ignore les fichiers de log
+*.ipynb
+.ipynb*
+
+# Ignore les dossier de pycache
+__pycache__/

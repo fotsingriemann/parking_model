@@ -1,0 +1,6 @@
+pandas
+numpy
+openlocationcode
+tqdm
+statsmodels
+openpyxl
