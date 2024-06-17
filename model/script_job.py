@@ -5,6 +5,14 @@ import pandas as pd
 # from statsmodels.tsa.arima.model import ARIMA
 
 import os
+from dotenv import load_dotenv
+
+# Charger les variables d'environnement à partir du fichier .env
+load_dotenv()
+
+# Accéder aux variables d'environnement
+data_path = os.getenv('DATA_PATH')
+arival_path = os.getenv('DATA_ARIVAL_PATH')
 
 from function_helper import delete_files, excel_detail_each_day, excel_details, heure_en_secondes
 
@@ -12,12 +20,12 @@ from function_helper import delete_files, excel_detail_each_day, excel_details, 
 print("Verification des nouvelle sources de donnees . . . \n")
 
 # S'il y a plus d'un fichier source dans le dossier data
-if(len(os.listdir("../data/arival_data")) >= 1) :
+if(len(os.listdir(os.path.join(data_path, arival_path))) >= 1) :
     print("Nouvelle source de donnees disponible \n")
     
     print("Chargement des donnees de reference . . . \n")
 
-    reference_data_tracking = pd.read_excel("../data/reference.xlsx")
+    reference_data_tracking = pd.read_excel(os.path.join(data_path ,"reference.xlsx"))
 
     print("Pre-traitement des donnees de references \n")
 
@@ -30,7 +38,7 @@ if(len(os.listdir("../data/arival_data")) >= 1) :
 
     print("chargement des donnees arrivees . . . \n")
 
-    donnee_ajoutee = pd.read_excel(f"../data/arival_data/{os.listdir('../data/arival_data')[0]}")
+    donnee_ajoutee = pd.read_excel(os.path.join(data_path, arival_path,os.listdir(os.path.join(data_path, arival_path))[0]))
     
     print("Pre-traitement de la donnee arrivees \n")
 
@@ -50,11 +58,11 @@ if(len(os.listdir("../data/arival_data")) >= 1) :
 
     print("Suppression des source . . . \n")
 
-    delete_files("../data")
+    delete_files(os.path.join(data_path))
 
     print("Sauvegarde de la nouvelle source de reference . . . \n")
 
-    result.to_excel("../data/reference.xlsx")
+    result.to_excel(os.path.join(data_path, "reference.xlsx"))
 
     print("recalcule des statistiques journalier des vehicules . . . \n")
 

@@ -4,6 +4,15 @@ import os
 import numpy as np
 import pandas as pd
 
+from dotenv import load_dotenv
+
+# Charger les variables d'environnement à partir du fichier .env
+load_dotenv()
+
+# Accéder aux variables d'environnement
+data_path = os.getenv('DATA_PATH')
+arival_path = os.getenv('DATA_ARIVAL_PATH')
+
 # Convertie en seconde un temps du format h:m:s
 def heure_en_secondes(heure):
     # Décomposer l'heure en heures, minutes et secondes
@@ -165,6 +174,7 @@ def delete_files(directory):
         except Exception as e:
             print(f"Failed to delete {file_path}. Reason: {e}")
 
-    filename = os.listdir(f'{directory}/arival_data')[0]
-    os.remove(f"../data/arival_data/{filename}")
-    print(f"{filename} has been deleted successfully")
+    filename_arival = os.listdir(f'{directory}/{arival_path}')[0]
+    
+    os.remove(os.path.join(directory, arival_path, filename_arival))
+    print(f"{filename_arival} has been deleted successfully")
