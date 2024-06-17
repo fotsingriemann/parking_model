@@ -10,7 +10,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Accéder aux variables d'environnement
-data_path = os.getenv('DATA_PATH')
 arival_path = os.getenv('DATA_ARIVAL_PATH')
 
 # Convertie en seconde un temps du format h:m:s
@@ -66,22 +65,22 @@ def excel_details(data_parking, immatriculation):
     pluscodes = number_of_house(data_parking, immatriculation)
 
     for pluscode in pluscodes :
-        lieux = list(data_parking["lieu"].value_counts().keys())
-        dicts["pluscode"].append(pluscode)
-        dicts["Rayon"].append(calculate_radius(pluscode))
+        data_1 = data_parking[data_parking["pluscode"] == pluscode]
+        lieux = list(data_1["lieu"].value_counts().keys())
+        
         for lieu in lieux :
             dicts["lieu"].append(lieu)
+            dicts["pluscode"].append(pluscode)
+            dicts["Rayon"].append(calculate_radius(pluscode))
             for col in ["lat", "lng"]:
 #                 model = ARIMA(data_1[col], order=(2,1,1))
 #                 model_fit_ = model.fit()
 #                 output = model_fit_.forecast()
 #                 toto = output[output.keys().start]
-                dicts[col].append(data_parking[col].mean())
-            
-                
+                dicts[col].append(data_1[col].mean())
+               
     df = pd.DataFrame(dicts)
     df.to_excel(f'model_save/{immatriculation}/details.xlsx', index=False, sheet_name='place_details')
-
 
 # Conversion d'u temps des secondes au format heure:minute:seconde
 def convert_seconds_to_hms(seconds):
@@ -108,9 +107,7 @@ def convert_seconds_to_ms(seconds):
 
 # stockage des detailles plus approfondie des lieux freqent de parking pour chaque jour (Lundi, Mardi, Mercredi, Jeudi, Vendredi, Samedi, Dimanche)
 def excel_detail_each_day(data_parking, immatriculation):
-    data_1 = data_parking[data_parking["IMMATRICULATION"]==immatriculation]
-    data_1["jour_date_reference_parking"] = data_1["jour_date_reference_parking"].apply(lambda x : x.split(" ")[0])
-    data_1["heure_de_parking"] = data_1["heure"]   
+    data_1 = data_parking[data_parking["IMMATRICULATION"]==immatriculation] 
     
     jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
     dicts = {
@@ -133,18 +130,18 @@ def excel_detail_each_day(data_parking, immatriculation):
         for pluscode in pluscodes :
             
             donnee = mes_info[mes_info['pluscode']==pluscode]
-            if len(donnee["heure_de_parking"]) >= 5:
+            if len(donnee["heure"]) >= 5:
                 dicts["lieu"].append(pluscode)
 #                 model = ARIMA(donnee["heure_de_parking"], order=(2,1,1))
 #                 model_fit_ = model.fit()
 #                 output_hp = model_fit_.forecast()
-                dicts["heure_moyenne_entre"].append(convert_seconds_to_hms(donnee["heure_de_parking"].mean()))
+                dicts["heure_moyenne_entre"].append(convert_seconds_to_hms(donnee["heure"].mean()))
             
 #                 model = ARIMA(donnee["heure_sortie_parking"], order=(2,1,1))
 #                 model_fit_ = model.fit()
 #                 output_hs = model_fit_.forecast()
                 dicts["heure_moyenne_sortie"].append(convert_seconds_to_hms(donnee["heure_sortie_parking"].mean()))
-                dicts["marge_heure_entre"].append(convert_seconds_to_ms(int(np.std(np.abs(donnee["heure_de_parking"] - donnee["heure_sortie_parking"].mean())))))
+                dicts["marge_heure_entre"].append(convert_seconds_to_ms(int(np.std(np.abs(donnee["heure"] - donnee["heure_sortie_parking"].mean())))))
                 dicts["marge_heure_sortie"].append(convert_seconds_to_ms(int(np.std(np.abs(donnee["heure_sortie_parking"] - donnee["heure_sortie_parking"].mean())))))
                 dicts["poid_du_lieu"].append(data_1["pluscode"].value_counts()[pluscode]/len(data_1["pluscode"]) * 100)
 
@@ -174,7 +171,7 @@ def delete_files(directory):
         except Exception as e:
             print(f"Failed to delete {file_path}. Reason: {e}")
 
-    filename_arival = os.listdir(f'{directory}/{arival_path}')[0]
+    filename_arival = os.listdir(arival_path)[0]
     
-    os.remove(os.path.join(directory, arival_path, filename_arival))
+    os.remove(os.path.join(arival_path, filename_arival))
     print(f"{filename_arival} has been deleted successfully")

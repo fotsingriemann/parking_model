@@ -20,7 +20,7 @@ from function_helper import delete_files, excel_detail_each_day, excel_details, 
 print("Verification des nouvelle sources de donnees . . . \n")
 
 # S'il y a plus d'un fichier source dans le dossier data
-if(len(os.listdir(os.path.join(data_path, arival_path))) >= 1) :
+if(len(os.listdir(os.path.join(arival_path))) >= 1) :
     print("Nouvelle source de donnees disponible \n")
     
     print("Chargement des donnees de reference . . . \n")
@@ -38,7 +38,7 @@ if(len(os.listdir(os.path.join(data_path, arival_path))) >= 1) :
 
     print("chargement des donnees arrivees . . . \n")
 
-    donnee_ajoutee = pd.read_excel(os.path.join(data_path, arival_path,os.listdir(os.path.join(data_path, arival_path))[0]))
+    donnee_ajoutee = pd.read_excel(os.path.join(arival_path, os.listdir(arival_path)[0]))
     
     print("Pre-traitement de la donnee arrivees \n")
 
@@ -58,7 +58,7 @@ if(len(os.listdir(os.path.join(data_path, arival_path))) >= 1) :
 
     print("Suppression des source . . . \n")
 
-    delete_files(os.path.join(data_path))
+    delete_files(data_path)
 
     print("Sauvegarde de la nouvelle source de reference . . . \n")
 
@@ -79,6 +79,8 @@ if(len(os.listdir(os.path.join(data_path, arival_path))) >= 1) :
             excel_detail_each_day(result, immatriculation)
 
         else: pass
+
+    print("Mise a jour des stats terminer avec succes")
 
 else :
     
