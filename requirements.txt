@@ -4,3 +4,4 @@ openlocationcode
 tqdm
 statsmodels
 openpyxl
+python-dotenv
