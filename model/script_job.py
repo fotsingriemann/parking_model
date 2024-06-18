@@ -109,8 +109,19 @@ if(len(os.listdir(arival_path)) >= 1) :
 
         else: pass
 
-    print("Mise a jour des stats terminer avec succes")
+    print("Mise a jour des stats terminer avec succes ! 🎉🎉🎉")
 
 else :
     
-    print("Aucune nouvelle source de donnee Pour le moment. Les stats sont Up to date")
+    print("Aucune nouvelle source de donnee Pour le moment. Les stats sont Up to date  📅")
+
+print("renitialisation des fichier de commande . . .")
+
+with open(os.path.join(command_path, "remove_consideration_location.txt"), 'w'):
+    pass
+
+with open(os.path.join(command_path, "add_consideration_location.txt"), 'w'):
+    pass
+
+print("everything done !👌")
+
