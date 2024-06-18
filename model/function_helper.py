@@ -86,6 +86,9 @@ def excel_details(data_parking, immatriculation, commande_liste):
                 dicts[col].append(data_1[col].mean())
                
     df = pd.DataFrame(dicts)
+    if(os.path.isfile(f'model_save/{immatriculation}/details.xlsx')):
+        os.remove('model_save/{immatriculation}/details.xlsx')
+
     df.to_excel(f'model_save/{immatriculation}/details.xlsx', index=False, sheet_name='place_details')
 
 # Conversion d'u temps des secondes au format heure:minute:seconde
@@ -155,6 +158,10 @@ def excel_detail_each_day(data_parking, immatriculation, commande_liste):
         df = pd.DataFrame(dicts)
         if(not os.path.isdir(f"model_save/{immatriculation}/stats")):
             os.mkdir(f"model_save/{immatriculation}/stats")
+        
+        if(os.path.isfile(f'model_save/{immatriculation}/stats/{jour}.xlsx')):
+            os.remove(f'model_save/{immatriculation}/stats/{jour}.xlsx')
+
         df.to_excel(f'model_save/{immatriculation}/stats/{jour}.xlsx', index=False, sheet_name='Sheet1')
         dicts = {
             "lieu" : [],
