@@ -43,18 +43,24 @@ def calculate_radius(olc_code):
     return radius
 
 # Determiner les lieux frequent de parking des vehicules
-def number_of_house(data_parking, immatriculation): # Data segmentation possible parts
-    pluscodes = list()
-    data_ = data_parking[data_parking["IMMATRICULATION"]==immatriculation]
-    data_pluscode = data_["pluscode"].value_counts()
-    for (pluscode, taille) in zip(data_pluscode.keys(), data_pluscode.values):
-        if(taille > np.mean(data_pluscode.values)):
-            pluscodes.append(pluscode)
+def number_of_house(data_parking, immatriculation, commande_list): # Data segmentation possible parts
+    
+        pluscodes = list()
+        data_ = data_parking[data_parking["IMMATRICULATION"]==immatriculation]
+        data_pluscode = data_["pluscode"].value_counts()
+        for (pluscode, taille) in zip(data_pluscode.keys(), data_pluscode.values):
+            if(taille > np.mean(data_pluscode.values)):
+                pluscodes.append(pluscode)
+
+        for commande in commande_list :
+            if(immatriculation == commande[0] ) :
+                if not commande[1] in pluscodes:
+                    pluscodes.append(commande[1])
  
-    return pluscodes
+        return pluscodes
 
 # Stockage des detailles sur les lieux de parking frequent d'une voiture connaissant son immatriculation
-def excel_details(data_parking, immatriculation):
+def excel_details(data_parking, immatriculation, commande_liste):
     dicts = {
         "lieu" : [],
         "lat" : [],
@@ -62,7 +68,7 @@ def excel_details(data_parking, immatriculation):
         "pluscode": [],
         "Rayon":[]
     }
-    pluscodes = number_of_house(data_parking, immatriculation)
+    pluscodes = number_of_house(data_parking, immatriculation, commande_liste)
 
     for pluscode in pluscodes :
         data_1 = data_parking[data_parking["pluscode"] == pluscode]
@@ -80,6 +86,9 @@ def excel_details(data_parking, immatriculation):
                 dicts[col].append(data_1[col].mean())
                
     df = pd.DataFrame(dicts)
+    if(os.path.isfile(f'model_save/{immatriculation}/details.xlsx')):
+        os.remove('model_save/{immatriculation}/details.xlsx')
+
     df.to_excel(f'model_save/{immatriculation}/details.xlsx', index=False, sheet_name='place_details')
 
 # Conversion d'u temps des secondes au format heure:minute:seconde
@@ -106,7 +115,7 @@ def convert_seconds_to_ms(seconds):
 
 
 # stockage des detailles plus approfondie des lieux freqent de parking pour chaque jour (Lundi, Mardi, Mercredi, Jeudi, Vendredi, Samedi, Dimanche)
-def excel_detail_each_day(data_parking, immatriculation):
+def excel_detail_each_day(data_parking, immatriculation, commande_liste):
     data_1 = data_parking[data_parking["IMMATRICULATION"]==immatriculation] 
     
     jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
@@ -119,7 +128,7 @@ def excel_detail_each_day(data_parking, immatriculation):
         "poid_du_lieu":[]
     }
     
-    pluscodes = number_of_house(data_parking, immatriculation)
+    pluscodes = number_of_house(data_parking, immatriculation, commande_liste)
 
     for jour in jours :
     
@@ -149,6 +158,10 @@ def excel_detail_each_day(data_parking, immatriculation):
         df = pd.DataFrame(dicts)
         if(not os.path.isdir(f"model_save/{immatriculation}/stats")):
             os.mkdir(f"model_save/{immatriculation}/stats")
+        
+        if(os.path.isfile(f'model_save/{immatriculation}/stats/{jour}.xlsx')):
+            os.remove(f'model_save/{immatriculation}/stats/{jour}.xlsx')
+
         df.to_excel(f'model_save/{immatriculation}/stats/{jour}.xlsx', index=False, sheet_name='Sheet1')
         dicts = {
             "lieu" : [],
@@ -175,3 +188,8 @@ def delete_files(directory):
     
     os.remove(os.path.join(arival_path, filename_arival))
     print(f"{filename_arival} has been deleted successfully")
+
+
+def is_file_empty(file_path):
+    with open(file_path, 'r') as file:
+        return file.read().strip() == ''

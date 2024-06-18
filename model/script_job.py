@@ -1,5 +1,6 @@
 # Chargement des libraries
-print("Importation des libraries et les fonction de helpers ...")
+print("Importation des libraries et les fonction de helpers ... \n \n")
+import datetime
 from tqdm import tqdm
 import pandas as pd
 # from statsmodels.tsa.arima.model import ARIMA
@@ -13,34 +14,27 @@ load_dotenv()
 # Accéder aux variables d'environnement
 data_path = os.getenv('DATA_PATH')
 arival_path = os.getenv('DATA_ARIVAL_PATH')
+command_path = os.getenv('COMMAND_PATH')
 
-from function_helper import delete_files, excel_detail_each_day, excel_details, heure_en_secondes
+from function_helper import delete_files, excel_detail_each_day, excel_details, heure_en_secondes, is_file_empty
 
+print(f"Ce script s'excute le: {datetime.datetime.now().date()} a {datetime.datetime.now().time()} \n \n")
 
-print("Verification des nouvelle sources de donnees . . . \n")
+print("Verification des nouvelle sources de donnees . . . \n \n")
 
 # S'il y a plus d'un fichier source dans le dossier data
-if(len(os.listdir(os.path.join(arival_path))) >= 1) :
-    print("Nouvelle source de donnees disponible \n")
+if(len(os.listdir(arival_path)) >= 1) :
+    print("Nouvelle source de donnees disponible \n \n")
     
-    print("Chargement des donnees de reference . . . \n")
+    print("Chargement des donnees de reference . . . \n \n")
 
     reference_data_tracking = pd.read_excel(os.path.join(data_path ,"reference.xlsx"))
 
-    print("Pre-traitement des donnees de references \n")
-
-    reference_data_tracking = reference_data_tracking.drop(columns = ["alertvalue", "parking", "rayon"])
-    reference_data_tracking = reference_data_tracking.dropna()
-    reference_data_tracking["jour_date_reference_parking"] = reference_data_tracking["jour_date_reference_parking"].apply(lambda x : x.split(" ")[0])
-    reference_data_tracking["heure"] = reference_data_tracking["heure"].apply(heure_en_secondes)
-    reference_data_tracking["heure_sortie_parking"] = reference_data_tracking["date_sortie_parking"].apply(lambda x : x.time())
-    reference_data_tracking["heure_sortie_parking"] = reference_data_tracking["heure_sortie_parking"].apply(heure_en_secondes)
-
-    print("chargement des donnees arrivees . . . \n")
+    print("chargement des donnees arrivees . . . \n \n")
 
     donnee_ajoutee = pd.read_excel(os.path.join(arival_path, os.listdir(arival_path)[0]))
     
-    print("Pre-traitement de la donnee arrivees \n")
+    print("Pre-traitement de la donnee arrivees \n \n")
 
     donnee_ajoutee = donnee_ajoutee.drop(columns = ["alertvalue", "parking", "rayon"])
     donnee_ajoutee = donnee_ajoutee.dropna()
@@ -49,24 +43,59 @@ if(len(os.listdir(os.path.join(arival_path))) >= 1) :
     donnee_ajoutee["heure_sortie_parking"] = donnee_ajoutee["date_sortie_parking"].apply(lambda x : x.time())
     donnee_ajoutee["heure_sortie_parking"] = donnee_ajoutee["heure_sortie_parking"].apply(heure_en_secondes)
 
-    print("fusion des source de donnees . . . \n")
+    print("fusion des source de donnees . . . \n \n")
 
     reference_data_tracking = reference_data_tracking.reset_index(drop=True)
     donnee_ajoutee = donnee_ajoutee.reset_index(drop=True)
 
     result = pd.concat([reference_data_tracking, donnee_ajoutee], ignore_index=False, axis=0)
 
-    print("Suppression des source . . . \n")
+    print("Suppression des source . . . \n \n")
 
     delete_files(data_path)
 
-    print("Sauvegarde de la nouvelle source de reference . . . \n")
+    print("Verification de l'entree des commandes  . . .\n \n")
+
+    # if not is_file_empty(os.path.join(command_path, "add_new_location.txt")):
+        
+    
+    
+    if(not is_file_empty(os.path.join(command_path, "remove_consideration_location.txt"))) :
+        file_commande_remove = open(os.path.join(command_path, "remove_consideration_location.txt"), 'r')
+        for line in file_commande_remove:
+                if line == '' : break
+                print(f"Execution des commande utilisateur de type delete detecter . . .")
+                if(not "delete" in line):
+                    print("cette commande de type delete n'est pas valide")
+                else:
+                    chaine = line.split("delete")
+                    result = result[result["IMMATRICULATION"] != chaine[0]]
+                    result = result[result["pluscode"] != chaine[1]]
+            
+                print(f"commande du vehicule {chaine[0]} executer sous restriction de sa location {chaine[1]}")
+
+    
+
+    commande_add = list()
+  
+    if(not is_file_empty(os.path.join(command_path, "add_consideration_location.txt"))) :   
+        file_commande_add = open(os.path.join(command_path, "add_consideration_location.txt"), 'r')
+        for line in file_commande_add:
+                if(line == '') : break
+                print(f"traitement des commande utilisateur add detecter . . .")
+                if(not "add" in line):
+                    print("cette commande de type add n'est pas valide")
+                else:
+                    commande_add.append(line.split("add"))
+
+
+    print("Sauvegarde de la nouvelle source de reference . . . \n \n")
 
     result.to_excel(os.path.join(data_path, "reference.xlsx"))
 
-    print("recalcule des statistiques journalier des vehicules . . . \n")
+    print("recalcule des statistiques journalier des vehicules . . . \n \n")
 
-    immatriculations = set(result["IMMATRICULATION"])
+    immatriculations = set(donnee_ajoutee["IMMATRICULATION"])
 
     for immatriculation in tqdm(immatriculations) :
         if(not os.path.isdir(f"model_save/{immatriculation}")):
@@ -75,8 +104,8 @@ if(len(os.listdir(os.path.join(arival_path))) >= 1) :
         else : pass
 
         if(not os.path.isfile(f"model_save/{immatriculation}/details.xlsx")):
-            excel_details(result, immatriculation)
-            excel_detail_each_day(result, immatriculation)
+            excel_details(result, immatriculation, commande_add)
+            excel_detail_each_day(result, immatriculation, commande_add)
 
         else: pass
 
