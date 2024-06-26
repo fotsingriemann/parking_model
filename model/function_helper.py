@@ -3,7 +3,8 @@ import datetime
 import os
 import numpy as np
 import pandas as pd
-
+import pmdarima as pm
+from statsmodels.tsa.arima.model import ARIMA
 from dotenv import load_dotenv
 
 # Charger les variables d'environnement à partir du fichier .env
@@ -79,11 +80,15 @@ def excel_details(data_parking, immatriculation, commande_liste):
             dicts["pluscode"].append(pluscode)
             dicts["Rayon"].append(calculate_radius(pluscode))
             for col in ["lat", "lng"]:
-#                 model = ARIMA(data_1[col], order=(2,1,1))
-#                 model_fit_ = model.fit()
-#                 output = model_fit_.forecast()
-#                 toto = output[output.keys().start]
-                dicts[col].append(data_1[col].mean())
+                auto_arima_model = pm.auto_arima(data_1[col], seasonal=False, error_action='ignore', suppress_warnings=True)
+                p, d, q = auto_arima_model.order
+                model = ARIMA(data_1[col], order=(p,d,q))
+                model_fit_ = model.fit()
+                output = model_fit_.forecast()
+                value = output[output.keys().start]
+                # dicts[col].append(data_1[col].mean())
+                dicts[col].append(value)
+
                
     df = pd.DataFrame(dicts)
     if(os.path.isfile(f'model_save/{immatriculation}/details.xlsx')):
@@ -141,17 +146,28 @@ def excel_detail_each_day(data_parking, immatriculation, commande_liste):
             donnee = mes_info[mes_info['pluscode']==pluscode]
             if len(donnee["heure"]) >= 5:
                 dicts["lieu"].append(pluscode)
-#                 model = ARIMA(donnee["heure_de_parking"], order=(2,1,1))
-#                 model_fit_ = model.fit()
-#                 output_hp = model_fit_.forecast()
-                dicts["heure_moyenne_entre"].append(convert_seconds_to_hms(donnee["heure"].mean()))
-            
-#                 model = ARIMA(donnee["heure_sortie_parking"], order=(2,1,1))
-#                 model_fit_ = model.fit()
-#                 output_hs = model_fit_.forecast()
-                dicts["heure_moyenne_sortie"].append(convert_seconds_to_hms(donnee["heure_sortie_parking"].mean()))
-                dicts["marge_heure_entre"].append(convert_seconds_to_ms(int(np.std(np.abs(donnee["heure"] - donnee["heure_sortie_parking"].mean())))))
-                dicts["marge_heure_sortie"].append(convert_seconds_to_ms(int(np.std(np.abs(donnee["heure_sortie_parking"] - donnee["heure_sortie_parking"].mean())))))
+                
+                auto_arima_model = pm.auto_arima(donnee["heure_de_parking"], seasonal=False, error_action='ignore', suppress_warnings=True)
+                p, d, q = auto_arima_model.order
+                model = ARIMA(donnee["heure_de_parking"], order=(p,d,q))
+                model_fit_ = model.fit()
+                output = model_fit_.forecast()
+                value_entree = output[output.keys().start]
+                # dicts["heure_moyenne_entre"].append(convert_seconds_to_hms(donnee["heure"].mean()))
+                dicts["heure_moyenne_entre"].append(convert_seconds_to_hms(value_entree))
+
+                auto_arima_model = pm.auto_arima(donnee["heure_sortie_parking"], seasonal=False, error_action='ignore', suppress_warnings=True)
+                p, d, q = auto_arima_model.order
+                model = ARIMA(donnee["heure_sortie_parking"], order=(p,d,q))
+                model_fit_ = model.fit()
+                output = model_fit_.forecast()
+                value_sortie = output[output.keys().start]
+
+                # dicts["heure_moyenne_sortie"].append(convert_seconds_to_hms(donnee["heure_sortie_parking"].mean()))
+                dicts["heure_moyenne_sortie"].append(convert_seconds_to_hms(value_sortie))
+
+                dicts["marge_heure_entre"].append(convert_seconds_to_ms(int(np.std(np.abs(donnee["heure"] - value_entree)))))
+                dicts["marge_heure_sortie"].append(convert_seconds_to_ms(int(np.std(np.abs(donnee["heure_sortie_parking"] - value_sortie)))))
                 dicts["poid_du_lieu"].append(data_1["pluscode"].value_counts()[pluscode]/len(data_1["pluscode"]) * 100)
 
 

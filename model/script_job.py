@@ -3,7 +3,7 @@ print("Importation des libraries et les fonction de helpers ... \n \n")
 import datetime
 from tqdm import tqdm
 import pandas as pd
-# from statsmodels.tsa.arima.model import ARIMA
+
 
 import os
 from dotenv import load_dotenv
@@ -119,7 +119,7 @@ if(len(os.listdir(arival_path)) >= 1) :
     with open(os.path.join(command_path, "add_consideration_location.txt"), 'w'):
         pass
 
-    print("everything done !")
+    print("everything done successfully !")
 
 else :
     
