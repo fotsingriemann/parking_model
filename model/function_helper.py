@@ -80,9 +80,9 @@ def excel_details(data_parking, immatriculation, commande_liste):
             dicts["pluscode"].append(pluscode)
             dicts["Rayon"].append(calculate_radius(pluscode))
             for col in ["lat", "lng"]:
-                auto_arima_model = pm.auto_arima(data_1[col])
-                p, d, q = auto_arima_model.order
-                model = ARIMA(data_1[col], order=(p,d,q))
+                # auto_arima_model = pm.auto_arima(data_1[col])
+                # p, d, q = auto_arima_model.order
+                model = ARIMA(data_1[col], order=(2,1,1))
                 model_fit_ = model.fit()
                 output = model_fit_.forecast()
                 value = output[output.keys().start]
@@ -147,18 +147,18 @@ def excel_detail_each_day(data_parking, immatriculation, commande_liste):
             if len(donnee["heure"]) >= 5:
                 dicts["lieu"].append(pluscode)
                 
-                auto_arima_model = pm.auto_arima(donnee["heure"], seasonal=False)
-                p, d, q = auto_arima_model.order
-                model = ARIMA(donnee["heure"], order=(p,d,q))
+                # auto_arima_model = pm.auto_arima(donnee["heure"], seasonal=False)
+                # p, d, q = auto_arima_model.order
+                model = ARIMA(donnee["heure"], order=(2,1,1))
                 model_fit_ = model.fit()
                 output = model_fit_.forecast()
                 value_entree = output[output.keys().start]
                 # dicts["heure_moyenne_entre"].append(convert_seconds_to_hms(donnee["heure"].mean()))
                 dicts["heure_moyenne_entre"].append(convert_seconds_to_hms(value_entree))
 
-                auto_arima_model = pm.auto_arima(donnee["heure_sortie_parking"])
-                p, d, q = auto_arima_model.order
-                model = ARIMA(donnee["heure_sortie_parking"], order=(p,d,q))
+                # auto_arima_model = pm.auto_arima(donnee["heure_sortie_parking"])
+                # p, d, q = auto_arima_model.order
+                model = ARIMA(donnee["heure_sortie_parking"], order=(2,1,1))
                 model_fit_ = model.fit()
                 output = model_fit_.forecast()
                 value_sortie = output[output.keys().start]
